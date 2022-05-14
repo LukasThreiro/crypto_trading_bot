@@ -9,11 +9,11 @@
 
 `sudo apt-get install python3-pip`
 
-`sudo pip3 install virtualenv`
+`sudo apt-get install python3-virtualenv`
 
 `virtualenv .venv`
 
 `. .venv/bin/activate`
 
-`sudo pip3 install -e .`
+`pip3 install -e .`
 

@@ -3,8 +3,8 @@ from setuptools import setup
 setup(
 	name = "crypto_trading_bot",
 	include_package_data = True,
+	packages = ["ct_bot", "logs"],
 	install_requires = [
-		"xlrd",
-		"cx_Oracle"
+		"timeloop"
 	]
 )
