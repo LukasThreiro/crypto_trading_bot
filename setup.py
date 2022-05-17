@@ -5,6 +5,7 @@ setup(
 	include_package_data = True,
 	packages = ["ct_bot", "logs"],
 	install_requires = [
-		"timeloop"
+		"timeloop",
+		"requests"
 	]
 )
