@@ -17,8 +17,10 @@ if (__name__ == "__main__"):
 	main_loop.counter = 0
 	LogMaker().info("Start systemu.")
 
-	ss = ExchangeConnectionFactory().getExchangeConnection("BinanceTestnet")
-	lolxd = ss.getBidAsk("BTC", "USDT")
-	print("result: " + str(lolxd))
+	binanceTest = ExchangeConnectionFactory().getExchangeConnection("BinanceTestnet")
+	#response = binanceTest.placeOrder("WAVESUSDT", "LIMIT", 12, "BUY", 6.1, "GTC")
+	response = binanceTest.canelOrder("WAVESUSDT", 46706760)
+	print("response:\n" + str(response))
+
 
 	tl.start(block = True)
