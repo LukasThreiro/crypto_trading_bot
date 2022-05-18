@@ -19,7 +19,8 @@ if (__name__ == "__main__"):
 
 	binanceTest = ExchangeConnectionFactory().getExchangeConnection("BinanceTestnet")
 	#response = binanceTest.placeOrder("WAVESUSDT", "LIMIT", 12, "BUY", 6.1, "GTC")
-	response = binanceTest.canelOrder("WAVESUSDT", 46706760)
+	#response2 = binanceTest.placeOrder("WAVESUSDT", "LIMIT", 8, "BUY", 6.15, "GTC")
+	response = binanceTest.cancelAllOrders("WAVESUSDT")
 	print("response:\n" + str(response))
 
 

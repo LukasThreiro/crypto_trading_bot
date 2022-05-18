@@ -289,6 +289,23 @@ class BinanceConnection:
 
 		return self._prepareOrderStatus(orderStatus)
 
+	def cancelAllOrders(self, symbol):
+		data = dict()
+		data["symbol"] = symbol
+		data["timestamp"] = int(time.time() * 1000)
+		data["signature"] = self._generateSignature(data)
+
+		if (self._futures):
+			response = self._makeRequest("DELETE", "/fapi/v1/allOpenOrders", data)
+		else:
+			response = self._makeRequest("DELETE", "/api/v3/openOrders", data)
+
+		if (response is not None):
+			return {"code": 200}
+		else:
+			return {"code": -1}
+
+
 
 
 
