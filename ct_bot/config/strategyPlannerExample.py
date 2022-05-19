@@ -8,7 +8,7 @@ class StrategyPlanner:
 				"strategyParams": {
 					"symbol": "WAVESUSDT",
 					"runInterval": 10, # minutes
-					"candleInterval": 60, # seconds
+					"candleInterval": 1, # minutes
 					"numberOfCandles": 12
 				}
 			},
@@ -18,7 +18,7 @@ class StrategyPlanner:
 				"strategyParams": {
 					"symbol": "BNBBUSD",
 					"runInterval": 10, # minutes
-					"candleInterval": 60, # seconds
+					"candleInterval": 1, # minutes
 					"numberOfCandles": 12
 				}
 			}

@@ -17,7 +17,7 @@ def main_loop():
 		conn = main_loop.conns[strategy.getExchangeConnectionName()]
 
 		try:
-			strategy.checkIfTakeAction(main_loop.counter, conn)
+			strategy.checkIfTakeAction(main_loop.counter, conn, main_loop.logMaker)
 		except:
 			main_loop.logMaker.exception(
 				"Błąd podczas podejmowania akcji przez strategię " + strategy.toString()
@@ -77,15 +77,4 @@ if (__name__ == "__main__"):
 
 	# URUCHOMIENIE SYSTEMU
 	tl.start(block = True)
-
-
-	"""
-	binanceTest = ExchangeConnectionFactory().getExchangeConnection("BinanceTestnet")
-	#response = binanceTest.placeOrder("WAVESUSDT", "LIMIT", 12, "BUY", 6.1, "GTC")
-	#response2 = binanceTest.placeOrder("WAVESUSDT", "LIMIT", 8, "BUY", 6.15, "GTC")
-	response = binanceTest.cancelAllOrders("WAVESUSDT")
-	print("response:\n" + str(response))
-	"""
-
-
 	

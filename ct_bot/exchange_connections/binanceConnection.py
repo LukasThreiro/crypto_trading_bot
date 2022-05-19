@@ -22,6 +22,32 @@ class BinanceConnection:
 	def getExchange():
 		return "Binance"
 
+	def _intervalTranslator(self, intervalInMinutes):
+		dictionary = {
+			"1": "1m",
+			"3": "3m",
+			"5": "5m",
+			"15": "15m",
+			"30": "30m",
+			"60": "1h",
+			"120": "2h",
+			"240": "4h",
+			"360": "6h",
+			"480": "8h",
+			"720": "12h",
+			"1440": "1d",
+			"4320": "3d",
+			"10080": "1w",
+			"43200": "1M"
+		}
+
+		interval = str(intervalInMinutes)
+
+		if (interval in dictionary.keys()):
+			return dictionary[interval]
+		else:
+			Exception("Binance. Nieprawidłowy interwał czasu dla metody getHistoricalCandles: " + interval)
+
 	def _makeRequest(self, method, endpoint, data):
 		if (method == "GET"):
 			response = requests.get(self._base_url + endpoint, params = data, headers = self._headers)
@@ -164,7 +190,7 @@ class BinanceConnection:
 	def getHistoricalCandles(self, symbol, interval, limit):
 		data = dict()
 		data["symbol"] = symbol
-		data["interval"] = interval
+		data["interval"] = self._intervalTranslator(interval)
 
 		if (limit > 1000):
 			raise Exception("Max number of candles on Binance Spot is 1000")
@@ -181,13 +207,13 @@ class BinanceConnection:
 		for raw_candle in raw_candles:
 			c = dict()
 			c["symbol"] = data["symbol"]
-			c["openTS"] = raw_candle[0]
-			c["open"] = raw_candle[1]
-			c["high"] = raw_candle[2]
-			c["low"] = raw_candle[3]
-			c["close"] = raw_candle[4]
-			c["volume"] = raw_candle[5]
-			c["closeTS"] = raw_candle[6]
+			c["openTS"] = int(raw_candle[0])
+			c["open"] = float(raw_candle[1])
+			c["high"] = float(raw_candle[2])
+			c["low"] = float(raw_candle[3])
+			c["close"] = float(raw_candle[4])
+			c["volume"] = float(raw_candle[5])
+			c["closeTS"] = int(raw_candle[6])
 			candles.append(c)
 
 		return sorted(candles, key = lambda d: d["openTS"])

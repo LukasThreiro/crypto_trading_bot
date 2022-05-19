@@ -6,6 +6,8 @@ setup(
 	packages = ["ct_bot", "logs"],
 	install_requires = [
 		"timeloop",
-		"requests"
+		"requests",
+		"numpy",
+		"scikit-learn"
 	]
 )
