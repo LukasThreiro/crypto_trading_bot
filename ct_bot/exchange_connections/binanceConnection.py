@@ -304,8 +304,3 @@ class BinanceConnection:
 			return {"code": 200}
 		else:
 			return {"code": -1}
-
-
-
-
-

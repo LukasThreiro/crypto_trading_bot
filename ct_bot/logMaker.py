@@ -29,5 +29,5 @@ class LogMaker:
 		self.logger.warning(message)
 
 	# Gdy coś pójdzie nie tak w bloku TRY
-	def error(self, message):
+	def exception(self, message):
 		self.logger.exception(message)
