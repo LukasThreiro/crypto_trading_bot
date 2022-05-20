@@ -17,3 +17,16 @@
 
 `pip3 install -e .`
 
+
+Następnie w katalogu ct_bot/config należy utworzyć następujące pliki konfiguracyjne:
+
+1. Plik exchangeCredentials.py zawierający dane niezbędne do połączenia się z poszczególnymi giełdami (na podstawie pliku exchangeCredentialsExample.py)
+
+2. Plik strategyPlanner.py zawierający konfigurację strategii, i ich przydział do konkretnych giełd (na podstawie pliku strategyPlannerExample.py)
+
+## Uruchamianie systemu
+
+Z poziomu głównego folderu wywołujemy
+
+`bash run.sh`
+
