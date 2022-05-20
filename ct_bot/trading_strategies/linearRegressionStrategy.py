@@ -6,6 +6,7 @@ class LinearRegressionStrategy:
 		self._strategyName = LinearRegressionStrategy.getStrategyName()
 		self._exchangeConnectionName = exchangeConnectionName
 		self._symbol = params["symbol"]
+		self._safeAsset = params["safeAsset"]
 		self._runInterval = params["runInterval"] # minutes
 		self._candleInterval = params["candleInterval"] # minutes
 		self._numberOfCandles = params["numberOfCandles"]
@@ -18,7 +19,7 @@ class LinearRegressionStrategy:
 
 		self._baseAsset = None
 		self._quoteAsset = None
-
+		self._lotSize = None
 
 	def toString(self):
 		return self._classString
@@ -67,16 +68,65 @@ class LinearRegressionStrategy:
 
 		return predictedY
 
-	def _baseAssetTransaction(self, exchangeConnection, side, priceOfBaseAsset, logMaker):
-		if ((self._baseAsset is None) or (self-_quoteAsset is None)):
+	def _ensureDataCompletness(self, exchangeConnection):
+		if (
+				(self._baseAsset is None)
+				or (self._quoteAsset is None)
+				or (self._lotSize is None)
+		):
 			info = exchangeConnection.getContractInfo(self._symbol)
 			self._baseAsset = info["baseAsset"]
 			self._quoteAsset = info["quoteAsset"]
+			self._lotSize = info["lotSize"]
 
+
+	def _baseAssetLimitTransaction(self, exchangeConnection, side, priceOfBaseAsset, logMaker):
+		# Uzupełnij informacje o BASE_ASSET i QUOTE_ASSET, jeśli potrzeba
+		self._ensureDataCompletness(exchangeConnection)
+
+		# Pobierz info o aktualnym saldzie BASE_ASSET i QUOTE_ASSET
 		balances = exchangeConnection.getBalances([self._baseAsset, self._quoteAsset])
 
+		# Ustal kwotę transakcji
+		if (side == "BUY"):
+			# KUPUJEMY BASE_ASSET po max cenie priceOfBaseAsset [QUOTE_ASSET]
+			baseAssetAmount = balances[self._quoteAsset]["walletBalance"] / priceOfBaseAsset
+		elif (side == "SELL"):
+			# SPRZEDAJEMY BASE_ASSET po min cenie priceOfBaseAsset [QUOTE_ASSET]
+			baseAssetAmount = balances[self._baseAsset]["walletBalance"]
 
+		# Upewnij się, że kwota jest wystarczająca
+		if (baseAssetAmount / self._lotSize < 1):
+			baseAssetAmount = 0
 
+		# Złóż zamówienie
+		if (baseAssetAmount > 0):
+			exchangeConnection.placeOrder(
+				symbol = self._symbol, # symbol
+				orderType = "LIMIT", # orderType
+				quantity = baseAssetAmount, # quantity
+				side = side, # side
+				price = priceOfBaseAsset, # price
+				tif = "GTC" # Time in Force
+			)
+
+		# Zapisz w logach
+		if (side == "BUY"):
+			if (baseAssetAmount > 0):
+				msg = "Złożono zamówienie kupna {0} {1} po max cenie {2} {3} za 1 {1}.".format(
+					baseAssetAmount, self._baseAsset, priceOfBaseAsset, self._quoteAsset
+				)
+			else:
+				msg = "Decyzja: dalej trzymaj {0}".format(self._baseAsset)
+		elif (side == "SELL"):
+			if (baseAssetAmount > 0):
+				msg = "Złożono zamówienie sprzedaży {0} {1} po min cenie {2} {3} za 1 {1}.".format(
+					baseAssetAmount, self._baseAsset, priceOfBaseAsset, self._quoteAsset
+				)
+			else:
+				msg = "Decyzja: dalej trzymaj {0}".format(self._quoteAsset)
+
+		self._log(logMaker, msg)
 
 	def checkIfTakeAction(self, minutes, exchangeConnection, logMaker):
 		if ((minutes - 1) % self._runInterval == 0):
@@ -100,13 +150,70 @@ class LinearRegressionStrategy:
 			if (prediction > currentPrices["ask"] * 1.01):
 				# Jeśli przyszła cena BASE_ASSET wyrażona w QUOTE_ASSET będzie wyższa,
 				# niż obecnie oferowana cena KUPNA
-				self._baseAssetTransaction(exchangeConnection, "BUY", currentPrices["ask"], logMaker)
+				self._baseAssetLimitTransaction(exchangeConnection, "BUY", currentPrices["ask"], logMaker)
 			elif (prediction < currentPrices["bid"] * (1.0 / 1.01)):
 				# Jeśli przyszła cena BASE_ASSET wyrażona w QUOTE_ASSET będzie niższa,
 				# niż obecnie oferowana cena SPRZEDAŻY
-				self._baseAssetTransaction(exchangeConnection, "SELL", currentPrices["bid"], logMaker)
+				self._baseAssetLimitTransaction(exchangeConnection, "SELL", currentPrices["bid"], logMaker)
 			else:
-				self._log(logMaker, "Brak akcji")
+				self._log(logMaker, "Niewystarczające przesłanki do podjęcia decyzji")
 
 	def toASafeState(self, exchangeConnection, logMaker):
-		pass
+		self._ensureDataCompletness(exchangeConnection)
+		
+		# anulowanie wszystkich wiszących zamówień
+		exchangeConnection.cancelAllOrders(self._symbol)
+		self._log(logMaker, "Anulowano wszystkie zamówienia.")
+
+		if (self._safeAsset is None):
+			return
+
+		if (self._safeAsset == self._baseAsset):
+			side = "BUY"
+		elif (self._safeAsset == self._quoteAsset):
+			side = "SELL"
+
+		# Pobierz info o aktualnym saldzie BASE_ASSET i QUOTE_ASSET
+		balances = exchangeConnection.getBalances([self._baseAsset, self._quoteAsset])
+
+		# Pobierz info o aktualnych cenach
+		currentPrices = exchangeConnection.getBidAsk(self._symbol)
+
+		# Ustal kwotę transakcji
+		if (side == "BUY"):
+			# KUPUJEMY BASE_ASSET po max cenie priceOfBaseAsset [QUOTE_ASSET]
+			priceOfBaseAsset = currentPrices["ask"]
+			baseAssetAmount = balances[self._quoteAsset]["walletBalance"] / priceOfBaseAsset
+		elif (side == "SELL"):
+			# SPRZEDAJEMY BASE_ASSET po min cenie priceOfBaseAsset [QUOTE_ASSET]
+			priceOfBaseAsset = currentPrices["bid"]
+			baseAssetAmount = balances[self._baseAsset]["walletBalance"]
+
+		# Upewnij się, że kwota jest wystarczająca
+		if (baseAssetAmount / self._lotSize < 1):
+			baseAssetAmount = 0
+
+		# Złóż zamówienie
+		if (baseAssetAmount > 0):
+			exchangeConnection.placeOrder(
+				symbol = self._symbol, # symbol
+				orderType = "LIMIT", # orderType
+				quantity = baseAssetAmount, # quantity
+				side = side, # side
+				price = priceOfBaseAsset, # price
+				tif = "GTC" # Time in Force
+			)
+
+		# Wypisz komunikat w logach
+		if (baseAssetAmount > 0):
+			self._log(logMaker, "Próba powrotu to bezpiecznej waluty " + self._safeAsset)
+		else:
+			self._log(logMaker, "Wszystkie środki znajdują się w bezpiecznej walucie " + self._safeAsset)
+
+
+
+
+
+
+
+

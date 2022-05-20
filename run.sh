@@ -8,4 +8,5 @@ pip3 install -e .
 cd ct_bot
 
 python3 main.py
+python3 toASafeState.py
 echo "The program has been safely terminated."

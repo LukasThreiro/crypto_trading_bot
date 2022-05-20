@@ -1,7 +1,15 @@
 class ExchangeCredentials:
 	def __init__(self):
 		self.credentials = {
-			"BinanceTestnet": {
+			"BinanceTestnetSpot": {
+				"exchange": "Binance",
+				"is_testnet": True,
+				"is_futures": True,
+				"base_url": "https://testnet.binancefuture.com",
+				"public_key": "",
+				"secret_key": ""
+			},
+			"BinanceTestnetFeatures": {
 				"exchange": "Binance",
 				"is_testnet": True,
 				"is_futures": True,
