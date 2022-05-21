@@ -8,7 +8,7 @@ from config.strategyPlanner import StrategyPlanner
 
 tl = Timeloop()
 
-@tl.job(interval = timedelta(seconds = 1))
+@tl.job(interval = timedelta(minutes = 1))
 def main_loop():
 	main_loop.counter += 1
 	main_loop.logMaker.info("Rozpoczęcie przebiegu pętli numer " + str(main_loop.counter))
