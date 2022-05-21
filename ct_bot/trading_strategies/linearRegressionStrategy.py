@@ -147,11 +147,11 @@ class LinearRegressionStrategy:
 			currentPrices = exchangeConnection.getBidAsk(self._symbol)
 
 			# MAKE A DECISION
-			if (prediction > currentPrices["ask"] * 1.01):
+			if (prediction > currentPrices["ask"] * 1.02):
 				# Jeśli przyszła cena BASE_ASSET wyrażona w QUOTE_ASSET będzie wyższa,
 				# niż obecnie oferowana cena KUPNA
 				self._baseAssetLimitTransaction(exchangeConnection, "BUY", currentPrices["ask"], logMaker)
-			elif (prediction < currentPrices["bid"] * (1.0 / 1.01)):
+			elif (prediction < currentPrices["bid"] * (1.0 / 1.02)):
 				# Jeśli przyszła cena BASE_ASSET wyrażona w QUOTE_ASSET będzie niższa,
 				# niż obecnie oferowana cena SPRZEDAŻY
 				self._baseAssetLimitTransaction(exchangeConnection, "SELL", currentPrices["bid"], logMaker)
@@ -190,7 +190,7 @@ class LinearRegressionStrategy:
 			baseAssetAmount = balances[self._baseAsset]["walletBalance"]
 
 		# Upewnij się, że kwota jest wystarczająca
-		if (baseAssetAmount / self._lotSize < 1):
+		if (baseAssetAmount / self._lotSize < 1.0):
 			baseAssetAmount = 0
 
 		# Złóż zamówienie
